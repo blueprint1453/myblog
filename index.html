@@ -2,64 +2,120 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <!-- <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"> -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Document</title>
+  <title>协议</title>
   <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.21.0/axios.min.js"></script>
   <style>
      * {
        padding: 0;
        margin: 0;
      }
+     html, body {
+       box-sizing: border-box;
+       height: 100%;
+       overflow-y: auto;
+       overflow-x: hidden;
+     }
+     *,*::before, *::after {
+       box-sizing: border-box;
+     }
+
+     /* .page-nav {
+       height: 34px;
+       width: 
+     } */
+
+     .container {
+       max-width: 640px;
+       margin: 0 auto;
+       display: none;
+     }
      .header {
       height: 156px;
       background: #16BF86;
       color: #fff;
-      padding-top: 48px;
-      padding-left: 36px;
+      padding-top: 30px;
+      padding-left: 16px;
      }
      .header .p1 {
       height: 20px;
       font-size: 14px;
       opacity: 0.9;
-      margin-bottom: 4px;
     }
     .header .p2 {
       font-size: 30px;
       margin-bottom: 10px;
-      font-weight: 600;
+      /* font-weight: 600; */
     }
     .p3,.p4 {
       font-size: 14px;
       opacity: 0.9;
-      margin-bottom: 4px;
+      /* margin-bottom: 4px; */
+      line-height: 18px;
     }
      .protocol-content {
        padding: 20px;
      }
+
+     .error-msg {
+       position: fixed;
+       top: 50%;
+       left: 50%;
+       transform: translate(-50%,-50%);
+       color: #aaa;
+       display: none;
+     }
   </style>
 </head>
 <body>
-    <div class="header">
-        <div class="p1">APP</div>
-        <div class="p2">隐私安全协议</div>
+    <!-- <div class="page-nav">
+      <img src="./static/images/icon_to_left.png" alt="" id="nav-back">
+      <title id="page-title">隐私安全协议</title>
+    </div> -->
+    <div class="error-msg" id="error-msg">服务出现异常</div>
+    <div class="container" id="container">
+      <div class="header">
+        <div class="p1" >APP</div>
+        <div class="p2" id="agreement-name"></div>
         <div class="p3"><span>更新时间： </span  > <span id="update-time"></span></div>
         <div class="p4"><span>生效时间：</span id="create-time"> <span id="create-time"></span> </div>
       </div>
       <div class="protocol-content" id="protocol-content" >
-       
+        
       </div>
+    </div>
   <script>
-    // axios.defaults.baseURL = 'https://api.example.com';
+  
+    
+    const agreementMap = {
+      'USERSERVERAGREE': '用户服务协议',
+      'USERPRIVACYAGREE': '用户隐私协议',
+      'PRIVACYSECUITYAGREE': '隐私安全协议',
+      'APPAGREE': '关于app',      
+    }
+    
+    let query = getUrlParam()
+    let {agreement_type = 'USERSERVERAGREE'} = query
+    
+    let apiUrl = `/supor-food-oss/possTAgreement/page?agreementType=${agreement_type}`
+
+    let agreementName = document.querySelector('#agreement-name')
     let updateTimeDom = document.querySelector('#update-time')
     let createTimeDom = document.querySelector('#create-time')
     let protocolContentDom = document.querySelector('#protocol-content')
+    let container = document.querySelector('#container')
+    let errorMsg = document.querySelector('#error-msg')
+
+    agreementName.innerHTML = agreementMap[agreement_type]
 
     const instance = axios.create({
-      baseURL: 'http://www.poss.cn:8080'
+      baseURL: 'http://www.poss.cn:8080',
+      timeout: 5000,
     });
-    instance.get('/supor-food-oss/possTAgreement/page?agreementType=USERSERVERAGREE').then(res => {
+
+    instance.get(apiUrl).then(res => {
       console.log(res)
       if (res.status === 200) {
         if (res.data.status === 200) {
@@ -69,9 +125,28 @@
           updateTimeDom.innerHTML = (info.lastUpdate + '').split(' ')[0]
           createTimeDom.innerHTML = info.createTime
           protocolContentDom.innerHTML = info.agreementContext
+
+          container.style.display = 'block'
         }
       }
+    }).catch(error => {
+      errorMsg.style.display = 'block'
     })
+
+
+    // 截取url的所有的参数 返回一个对象集合
+    function getUrlParam(url) {
+      let str = url || window.location.href
+      var urlParamReg = /(?<=[\?|\&])(\w+?)=([^&]*)&?/g
+      var obj = {}
+      str.replace(urlParamReg, (match, $1, $2) => {
+        obj[$1] = decodeURIComponent($2)
+        console.log(match, $1, obj[$1])
+        return match
+      })
+      return obj
+    }
+
   </script>
 </body>
 </html>
